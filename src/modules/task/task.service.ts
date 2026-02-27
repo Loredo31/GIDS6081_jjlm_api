@@ -1,8 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateTaskDto } from '../auth/dto/create-task.dto';
+import { Client } from 'pg';
 
 @Injectable()
 export class TaskService {
+
+  constructor(//@Inject('MYSQL_CONNECTION') private mysql: any,
+              @Inject('POSTGRES_CONNECTION') private postgres: Client
+  ) {}  
+
+  public async getAllTasks(): Promise<any[]> {
+    const query = 'SELECT * FROM tasks ORDER BY name ASC';
+
+    const results = await this.postgres.query(query);
+
+   // const results = await this.mysql.query(query);
+    return results.rows; 
+  }
+
   private tasks: any[] = [];
 
   public getTasks(): any[] {

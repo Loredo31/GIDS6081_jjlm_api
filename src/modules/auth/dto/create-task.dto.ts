@@ -7,4 +7,5 @@ export class CreateTaskDto {
 
   @IsNotEmpty()
   priority: boolean;
+  user_id: any;
 }
