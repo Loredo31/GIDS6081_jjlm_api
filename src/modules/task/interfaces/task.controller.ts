@@ -9,13 +9,14 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
+import { Task } from './task.entity';
 
 @Controller('api/task')
 export class TaskController {
   constructor(private taskSvc: TaskService) {}
 
   @Get()
-  public getTasks(): any[] {
+  public getTasks(): Promise<Task[]> {
     return this.taskSvc.getTasks();
   }
 

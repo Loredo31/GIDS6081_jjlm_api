@@ -21,6 +21,3 @@ bootstrap();
 //?MySQL
 //! npm install mysql2
 //! npm install @types/mysql -D
-
-
-// git commit -m "fix: Conexión a base de datos(mySQL/Postgres) con uso de providers"
