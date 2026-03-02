@@ -1,69 +1,53 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateTaskDto } from '../dto/create-task.dto';
 import { Task } from './task.entity';
-//import { Task } from '../entities/task.entity';
+import { CreateTaskDto } from '../dto/create-task.dto';
+import { updateTaskDto } from '../dto/update-task.dto';
 
 @Injectable()
 export class TaskService {
-  constructor(@Inject('MYSQL_CONNECTION') private db: any) {}
+  constructor(
+    @Inject('MYSQL_CONNECTION') private mysql: any,
+    // @Inject('PG_CONNECTION') private pg: any,
+  ) {}
 
-  private tasks: any[] = [];
+  public async getAllTasks(): Promise<Task[]> {
+    const query = 'SELECT * FROM tasks ORDER BY name ASC';
 
-  public async getTasks(): Promise<any> {
-    const query = 'SELECT * FROM tasks';
-    const [result]: any = await this.db.query(query);
+    const [results] = await this.mysql.query(query);
 
-    return result[0];
+    return results as Task[];
   }
 
-  public async getTasksById(id: number): Promise<any> {
+  public async getTaskById(id: number): Promise<Task> {
     const query = `SELECT * FROM tasks WHERE id = ${id}`;
-
-    const [result] = await this.db.query(query);
-    return result;
+    const [results] = await this.mysql.query(query);
+    return results[0] as Task;
   }
 
-  public async insert(task: CreateTaskDto): Promise<any> {
-    const sql = `
-  INSERT INTO tasks (name, description, priority, user_id)
-  VALUES ('${task.name}','${task.description}',${task.priority},${task.user_id})`;
-
-    const [result]: any = await this.db.query(sql);
+  public async InsertTask(task: CreateTaskDto): Promise<Task> {
+    const query = `INSERT INTO tasks (name, description, priority, user_id) VALUES ('${task.name}', '${task.description}', ${task.priority}, ${task.user_id})`;
+    const [result] = await this.mysql.query(query);
     const insertId = result.insertId;
-
-    const row = await this.getTasksById(insertId);
-
-    return row;
+    return await this.getTaskById(result.insertId);
   }
 
-  public async update(id: number, taskUpdate): Promise<Task> {
-    const task = await this.getTasksById(id);
+  public async updateTask(
+    id: number,
+    taskUpdate: updateTaskDto,
+  ): Promise<Task> {
+    const task = await this.getTaskById(id);
+    task.name = taskUpdate.name ?? task.name;
+    task.description = taskUpdate.description ?? task.description;
+    task.priority = taskUpdate.priority ?? task.priority;
 
-    task.name = taskUpdate.name ? taskUpdate.name : task.name;
-    task.description = taskUpdate.description ?? taskUpdate.description;
-    task.priority = taskUpdate.priority ?? taskUpdate.priority;
-
-    const query = `UPDATE tasks
-    SET name = '${task.name}',
-    description = '${task.description}',
-    priority = '${task.priority}',
-    WHERE id = '${task.id}'
-    `;
-
-    await this.db.query(query);
-    return await this.getTasksById(id);
-
-    //convertir el bejto a un set
-    //{ name }: 'abc', description: 'abc'}
-    //name = '', dscription''
-    //const sets = Object.keys(taskUpdate)
-    //.map(key =>`${key} = '${taskUpdate[key] }'`).join(',');
+    const query = `UPDATE tasks SET name = '${task.name}', description = '${task.description}', priority = ${task.priority} WHERE id = ${id}`;
+    await this.mysql.query(query);
+    return await this.getTaskById(id);
   }
 
-  public async delete(id: number): Promise<boolean> {
+  public async deleteTask(id: number): Promise<boolean> {
     const query = `DELETE FROM tasks WHERE id = ${id}`;
-    const [result] = await this.db.query(query);
-
+    const [result] = await this.mysql.query(query);
     return result.affectedRows > 0;
   }
 }
