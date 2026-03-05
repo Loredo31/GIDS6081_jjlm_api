@@ -1,3 +1,4 @@
+import { True } from './../../../../node_modules/@mrleebo/prisma-ast/src/lexer';
 import {
   Controller,
   Get,
@@ -71,10 +72,91 @@ export class TaskController {
 
   @Delete(':id')
   public async deleteTask(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
-    const result = await this.taskSvc.deleteTask(id);
-
-    if (!result) 
-      throw new HttpException("No se pudo eliminar la tarea", HttpStatus.NOT_FOUND);
-    return this.taskSvc.deleteTask(id);
+    try {
+        await this.taskSvc.deleteTask(id);
+    }catch (error) {
+        throw new HttpException("Task not found", HttpStatus.NOT_FOUND);
+    }
+    return true;
   }
 }
+
+
+
+// import {
+//   Body,
+//   Controller,
+//   Delete,
+//   Get,
+//   HttpException,
+//   HttpStatus,
+//   Param,
+//   ParseIntPipe,
+//   Post,
+//   Put,
+// } from '@nestjs/common';
+// import { TaskService } from './task.service';
+// import { CreateTaskDto } from '../dto/create-task.dto';
+// import { Task } from '../entities/task.entity';
+// import { UpdateTaskDto } from '../dto/update-task.dto';
+
+// @Controller('/api/task')
+// export class TaskController {
+//   constructor(private tasksvc: TaskService) {}
+
+//   @Get('')
+//   async getAllTasks(): Promise<Task[]> {
+//     return await this.tasksvc.getAllTasks();
+//   }
+
+//   @Get(':id')
+//   public async listTaskById(
+//     @Param('id', ParseIntPipe) id: number,
+//   ): Promise<Task> {
+//     const result = await this.tasksvc.getTaskById(id);
+//     console.log('Tipo de dato', typeof result);
+
+//     if (result == undefined) {
+//       throw new HttpException(
+//         `Tarea con ID ${id} no encontrada`,
+//         HttpStatus.NOT_FOUND,
+//       );
+//     }
+
+//     return result;
+//   }
+
+//   @Post('')
+//   public insertTask(@Body() task: CreateTaskDto): Promise<Task> {
+//     const result = this.tasksvc.insertTask(task);
+
+//     if (!result) {
+//       throw new HttpException(
+//         'Error al insertar la tarea',
+//         HttpStatus.INTERNAL_SERVER_ERROR,
+//       );
+//     }
+
+//     return result;
+//   }
+
+//   @Put(':id')
+//   public async updateTask(
+//     @Param('id', ParseIntPipe) id: number,
+//     @Body() task: UpdateTaskDto,
+//   ): Promise<Task> {
+//     return await this.tasksvc.updateTask(id, task);
+//   }
+
+//   @Delete(':id')
+//   public async deleteTask(
+//     @Param('id', ParseIntPipe) id: number,
+//   ): Promise<boolean> {
+//     try {
+//       await this.tasksvc.deleteTask(id);
+//     }catch (error) {
+//       throw new HttpException("Task not found", HttpStatus.NOT_FOUND);
+//     }
+//     return true;
+//   }
+// }
