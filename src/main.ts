@@ -6,33 +6,38 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  //Pipe para realizar la validación de forma global
-  app.useGlobalPipes(new ValidationPipe({
-      whitelist: true, // Elimina propiedades que no están definidas en el DTO
-  }),
+  //Uso de pipes de forma global
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Elimina propiedades no definidas en el DTO
+    }),
   );
 
-  // Configuracion de swagger
+  //Configuracion de swagger
   const config = new DocumentBuilder()
     .setTitle('API con vulnerabilidades de seguridad')
-    .setDescription('Documentación de la API para pruebas')
+    .setDescription('Documentacion de la API para pruebas.')
     .setVersion('1.0.0')
     .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
 
-//?POSTGRES
-//! npm i pg
-//! npm i @types/pg
+//? MYSQL
+//!npm i mysql2
+//!npm i @types/mysql2 -D
 
-//?MySQL
-//! npm install mysql2
-//! npm install @types/mysql -D
+//? POSTGRESQL
+//!npm i pg
+//!npm i @types/pg -D
 
-//? SWAGGER
-//! npm install @nestjs/swagger 
+//? Install SWAGGER
+//! npm install @nestjs/swagger
+
+//! git commit -a "fix: CRUD funcional con base de datos y configuracion de SWAGGER"
+
+//! git commit -a "fix: Uso de prisma y correccion de CRUD (Task)"
