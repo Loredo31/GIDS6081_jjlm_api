@@ -11,7 +11,8 @@ import {
   Put,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from 'generated/prisma/browser';
+//import { User } from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 import { CreateUserDto } from '../dto/create-user';
 import { UpdateUserDto } from '../dto/update-user';
 import { UtilService } from 'src/common/services/util.service';

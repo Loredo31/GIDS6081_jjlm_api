@@ -18,8 +18,9 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(200)
   lastName  String   @db.VarChar(300)
-  username  String   @db.VarChar(100)
+  username  String   @db.VarChar(100) @unique
   password  String   @db.LongText
+  refreshToken String?   
   createdAt DateTime @default(now())
   task Task[]
 }
@@ -32,3 +33,6 @@ model Task {
   user_id Int
   user User @relation(fields: [user_id], references: [id])
 }
+
+//! Al hacer un cambio ejecutar: npx prisma generate
+//! Se elimina la base de datos y despuejes ejecutar: npx prisma migrate dev

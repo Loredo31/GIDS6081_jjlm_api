@@ -10,4 +10,10 @@ export class UtilService {
     public async checkPassword(password: string, encriptedPassword: string) {
         return await bcrypt.compareSync(password, encriptedPassword);
     }   
+
+    public async comparePassword(password: string,hashedPassword: string,): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
+  }
+
+  
 }
