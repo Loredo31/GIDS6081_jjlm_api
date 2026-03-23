@@ -14,6 +14,12 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
+  public async getUserByUserName(username: string): Promise <User | null> {
+    return await this.prisma.user.findFirst({
+      where: {username}
+    });
+  }
+
   async login(userLogin: LoginDto): Promise<User | null> {
 
     // buscar usuario por username

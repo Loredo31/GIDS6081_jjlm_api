@@ -47,3 +47,5 @@ bootstrap();
 //! npm i -D @types/bcrypt
 
 //! git commit -m "fix: CRUD de usuarios y creación de rutas paa la autenticación"
+
+//! git commit -m "fix: Inicio de sesión completo y proteccion de rutas"

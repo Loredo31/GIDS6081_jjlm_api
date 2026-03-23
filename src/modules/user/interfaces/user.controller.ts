@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 //import { User } from 'generated/prisma/client';
@@ -16,9 +17,11 @@ import { User } from 'generated/prisma/client';
 import { CreateUserDto } from '../dto/create-user';
 import { UpdateUserDto } from '../dto/update-user';
 import { UtilService } from 'src/common/services/util.service';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 
-@Controller('/api/users')
+@Controller('/api/user')
+@UseGuards(AuthGuard)
 export class UserController {
     constructor(
         private usersvc: UserService,
