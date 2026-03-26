@@ -3,7 +3,8 @@ export class User {
     name: string;
     lastName: string;
     username: string;
-    refreshToken: string|null;
+    hash: string | null;
+    //refreshToken: string|null;
     password: string;
     createdAt: Date;
 }

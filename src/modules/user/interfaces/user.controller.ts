@@ -48,7 +48,7 @@ async getAllUsers(): Promise<User[]> {
 
 @Post('') 
 public async insertUser(@Body() user: CreateUserDto): Promise<User> {
-    const encryptedPassword = await this.utilSvc.hashPassword(user.password);
+    const encryptedPassword = await this.utilSvc.hash(user.password);
     user.password = encryptedPassword;
     const result = this.usersvc.insertUser(user);
     if (result == undefined || result == null) {

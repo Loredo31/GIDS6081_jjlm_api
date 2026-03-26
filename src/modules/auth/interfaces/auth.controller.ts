@@ -1,10 +1,11 @@
-import { Body,Controller, Get, HttpCode, HttpException, HttpStatus, Post, UnauthorizedException } from '@nestjs/common';
+import { Body,Controller, ForbiddenException, Get, HttpCode, HttpException, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { User } from 'src/modules/user/entities/user.entity';
 import { ApiOperation } from '@nestjs/swagger';
 import { UtilService } from 'src/common/services/util.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api/auth')
 export class AuthController {
@@ -27,15 +28,22 @@ public async login(@Body() login: LoginDto): Promise<any> {
         const {password, username, ...payload} = user;
 
         // Genera el JWT
-        const access_token = await this.utilSvc.generateJWT(payload);
+        const access_token = await this.utilSvc.generateJWT(payload, '1h');
 
         // Generar el refresh token
         const refresh_token = await this.utilSvc.generateJWT(payload, '7d');
+        const hashRT = await this.utilSvc.hash(refresh_token);
+
+        // Asignar el hash al usuario
+        await this.authSvc.updateHash(user.id, hashRT);
+        payload.hash = hashRT;
+
+        // FIXME: Asignar el hash al usuario
 
         // Devolver el JWT encriptado
         return {
             access_token,
-            refresh_token
+            refresh_token: hashRT
         }
 
     } else {
@@ -43,50 +51,41 @@ public async login(@Body() login: LoginDto): Promise<any> {
     }
 }
 
-    //Post /auth/register  - 201 Created
-
-//     @Post('login')
-// @ApiOperation({ summary: 'Login de usuario' })
-// public async login(@Body() user: LoginDto): Promise<User> {
-
-//     const result = await this.authSvc.login(user);
-
-//     if (result == undefined || result == null) {
-//         throw new HttpException(
-//             `Usuario o contraseña incorrectos`,
-//             HttpStatus.UNAUTHORIZED,
-//         );
-//     }
-
-//     return result;
-// }
-
-  // @Post('/login')
-  // @HttpCode(HttpStatus.OK)
-  // public login(@Body() loginDto: LoginDto): string {
-  //   const {username, password}= loginDto;
-  //    // TODOS: Verifica el usuario y contraseña
-
-  //    // TODO: Obtener la información del usuario (payload)
-
-  //    // TODO: Generar el JWT
-
-  //    // TODO: Devolver el JWT encriptado
-  //   return this.authSvc.login();
-  // }
-
   @Get("/me")
-  public getProfile() {
+  @UseGuards(AuthGuard)
+  public getProfile(@Req() request: any) {
+    const user = request['user'];
+        return user
 
   }
 
-  @Post('/register')
-  public refreshToken() {
-    
+  @Post('/refresh')
+  @UseGuards(AuthGuard)
+  public async refreshToken(@Req() request: any) {
+    // Obtener el usuario en sesión
+    const sessionUser = request['user'];
+    const user = await this.authSvc.getUserById(sessionUser.id);
+    if(!user || !user.hash) throw new ForbiddenException('Acceso denegado')
+
+    // Comparar el token resivido con el token guardado
+    if (sessionUser.hash != user.hash) throw new ForbiddenException('Token invalido');
+
+    // Si el token es valido se generan nuevos tokens
+    return {
+        acces_token: '',
+        refresh_token: ''
+    }
+
   }
 
   @Post('/logout')
-  public logout() {
-  
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async logout(@Req() request: any) {
+    const session = request['user'];
+    const user = await this.authSvc.updateHash (session.id, null);
+    return user;   
   }
 }
+
+// git commit -m "bug: corrección de inicio de sesión y configuracion de rutas (me, logout, refresh)"

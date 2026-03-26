@@ -20,7 +20,8 @@ model User {
   lastName  String   @db.VarChar(300)
   username  String   @db.VarChar(100) @unique
   password  String   @db.LongText
-  refreshToken String?   
+  hash String?  @db.LongText
+  //refreshToken String?   
   createdAt DateTime @default(now())
   task Task[]
 }
@@ -36,3 +37,4 @@ model Task {
 
 //! Al hacer un cambio ejecutar: npx prisma generate
 //! Se elimina la base de datos y despuejes ejecutar: npx prisma migrate dev
+
