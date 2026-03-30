@@ -20,7 +20,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 
 
 @Controller('/api/user')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 export class UserController {
     constructor(
         private usersvc: UserService,
