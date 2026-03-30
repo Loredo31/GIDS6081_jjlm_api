@@ -12,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-//import { User } from 'generated/prisma/client';
 import { User } from 'generated/prisma/client';
 import { CreateUserDto } from '../dto/create-user';
 import { UpdateUserDto } from '../dto/update-user';
@@ -21,7 +20,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 
 
 @Controller('/api/user')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 export class UserController {
     constructor(
         private usersvc: UserService,

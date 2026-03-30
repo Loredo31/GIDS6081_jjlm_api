@@ -1,91 +1,90 @@
-import { Body,Controller, ForbiddenException, Get, HttpCode, HttpException, HttpStatus, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, HttpStatus, UseGuards, HttpCode, Get, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from '../dto/login.dto';
-import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
-import { User } from 'src/modules/user/entities/user.entity';
-import { ApiOperation } from '@nestjs/swagger';
 import { UtilService } from 'src/common/services/util.service';
-import { AuthGuard } from '@nestjs/passport';
 
-@Controller('api/auth')
+import { AuthGuard } from 'src/common/guards/auth.guard';
+import { ApiOperation } from '@nestjs/swagger';
+import { LoginDto } from '../dto/login.dto';
+import { AppException } from 'src/common/exceptions/app.exception';
+
+@Controller('auth')
 export class AuthController {
-  constructor(private readonly authSvc: AuthService,
-              private readonly utilSvc: UtilService
+  constructor(
+    private readonly authSvc: AuthService,
+    private readonly utilSvc: UtilService,
   ) {}
 
+  @Post('login')
+  public async login(@Body() auth: LoginDto): Promise<any> {
+    const { username, password } = auth;
+    
+    // Buscar al usuario por nombre de usuario
+    const user = await this.authSvc.getUserByUsername(username);
 
-@Post('/login')
-@HttpCode(HttpStatus.OK)
-public async login(@Body() login: LoginDto): Promise<any> {
-    const {username, password} = login;
-
-    const user = await this.authSvc.getUserByUserName(username);
-    if (!user)
-        throw new UnauthorizedException('El usuario y/o contraseña incorrecto')
-
-    if (await this.utilSvc.checkPassword(password, user.password!)) {
-        // Obtener la información del usuario (payload)
-        const {password, username, ...payload} = user;
-
-        // Genera el JWT
-        const access_token = await this.utilSvc.generateJWT(payload, '1h');
-
-        // Generar el refresh token
-        const refresh_token = await this.utilSvc.generateJWT(payload, '7d');
-        const hashRT = await this.utilSvc.hash(refresh_token);
-
-        // Asignar el hash al usuario
-        await this.authSvc.updateHash(user.id, hashRT);
-        payload.hash = hashRT;
-
-        // FIXME: Asignar el hash al usuario
-
-        // Devolver el JWT encriptado
-        return {
-            access_token,
-            refresh_token: hashRT
-        }
-
-    } else {
-        throw new UnauthorizedException('El usuario y/o contraseña es incorrecta')
+    // Si el usuario no existe, lanzar excepción
+    if (!user) {
+      throw new UnauthorizedException('el usuario y/o contraseña no existen');
     }
-}
 
-  @Get("/me")
-  @UseGuards(AuthGuard)
-  public getProfile(@Req() request: any) {
-    const user = request['user'];
-        return user
+    // Validar si la contraseña es correcta
+    if (!(await this.utilSvc.checkPassword(password, user.password!))) {
+      throw new UnauthorizedException('el usuario y/o contraseña no existen');
+    }
 
-  }
+    // Desestructuración para separar el password del resto de los datos del usuario (payload)
+    const { password: _, ...payload } = user;
 
-  @Post('/refresh')
-  @UseGuards(AuthGuard)
-  public async refreshToken(@Req() request: any) {
-    // Obtener el usuario en sesión
-    const sessionUser = request['user'];
-    const user = await this.authSvc.getUserById(sessionUser.id);
-    if(!user || !user.hash) throw new ForbiddenException('Acceso denegado')
+    // Generar refresh token (expira en 7 días según el parámetro '7d')
+    const refreshToken = await this.utilSvc.generateJWTPayload(payload, '7d');
+    const hash = await this.utilSvc.hash(refreshToken)
+    await this.authSvc.updateHash(user.id, hash);
+    payload.hash = hash;
 
-    // Comparar el token resivido con el token guardado
-    if (sessionUser.hash != user.hash) throw new ForbiddenException('Token invalido');
+    // Generar token de acceso (expira en 1 hora según el parámetro '1h')
+    const jwt = await this.utilSvc.generateJWTPayload(payload, '1h');
 
-    // Si el token es valido se generan nuevos tokens
+    // Devolver la información al cliente
     return {
-        acces_token: '',
-        refresh_token: ''
-    }
-
+      access_token: jwt,
+      refresh_token: refreshToken,
+    };
   }
 
-  @Post('/logout')
+  @Get("me")
+  @ApiOperation({summary:"Extrae el id del usuario desde el token y busca la imformacion"})
   @UseGuards(AuthGuard)
+  public getProfile(@Req() req){
+    return req.user;
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  public async refreshToken(@Req() request: any){
+    // Obtener el usuario en sesion
+    const userSession = request.user;
+    const user = await this.authSvc.getUserById(userSession.id);
+    if (!user || !user.hash) throw new AppException('Acceso denegado', HttpStatus.FORBIDDEN);
+
+    //Comparar el token recibido con el token guardado
+    if(userSession.hash != user.hash)throw new AppException('Token invalido',HttpStatus.FORBIDDEN);
+
+    //FIXME: Si el token es valido se generan nuevos tokens
+    return{
+      access_token: '',
+      refresh_token: ''
+    }
+  }
+
+  @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Req() request: any) {
-    const session = request['user'];
-    const user = await this.authSvc.updateHash (session.id, null);
-    return user;   
+  @UseGuards(AuthGuard)
+  public async logout(@Req() request: any){
+    const session = request.user;
+    const user = await this.authSvc.updateHash(session.id,null);
+    return user;
   }
 }
 
-// git commit -m "bug: corrección de inicio de sesión y configuracion de rutas (me, logout, refresh)"
+ 
+

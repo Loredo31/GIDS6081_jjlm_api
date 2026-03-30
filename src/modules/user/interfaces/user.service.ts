@@ -3,15 +3,21 @@ import { PrismaService } from "src/common/services/prisma.service";
 import { User } from "../entities/user.entity";
 import { CreateUserDto } from "../dto/create-user";
 import { UpdateUserDto } from "../dto/update-user";
+import { UtilService } from "src/common/services/util.service";
 
+
+// @Injectable()
+// export class UserService {
+//     utilService: any;
+//     constructor(
+//         @Inject('MYSQL_CONNECTION') private mysql: any,
+//         private prisma: PrismaService,
+//     ) {}
 
 @Injectable()
 export class UserService {
-    utilService: any;
-    constructor(
-        @Inject('MYSQL_CONNECTION') private mysql: any,
-        private prisma: PrismaService,
-    ) {}
+  constructor(private prisma: PrismaService, private readonly utilService: UtilService,
+  ) { }
 
 
 public async getAllUsers(): Promise<User[]> {
