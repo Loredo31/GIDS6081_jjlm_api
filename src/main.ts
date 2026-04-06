@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,9 @@ async function bootstrap() {
     }),
   );
 
+  // Uso de filtros globales
+  app.useGlobalFilters(new AllExceptionsFilter());
+
   //Configuracion de swagger
   const config = new DocumentBuilder()
     .setTitle('API con vulnerabilidades de seguridad')
@@ -23,7 +27,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 5173);
 }
 bootstrap();
 
@@ -49,3 +53,5 @@ bootstrap();
 //! git commit -m "fix: CRUD de usuarios y creación de rutas paa la autenticación"
 
 //! git commit -m "fix: Inicio de sesión completo y proteccion de rutas"
+
+//! git commit -m "fix: Uso de custom errors y creación de logs"

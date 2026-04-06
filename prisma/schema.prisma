@@ -21,9 +21,9 @@ model User {
   username  String   @db.VarChar(100) @unique
   password  String   @db.LongText
   hash String?  @db.LongText
-  //refreshToken String?   
   createdAt DateTime @default(now())
   task Task[]
+  logs Logs[]
 }
 
 model Task {
@@ -35,6 +35,22 @@ model Task {
   user User @relation(fields: [user_id], references: [id])
 }
 
-//! Al hacer un cambio ejecutar: npx prisma generate
-//! Se elimina la base de datos y despuejes ejecutar: npx prisma migrate dev
+model Logs {
+  id Int @default(autoincrement()) @id
+  statusCode Int
+  timestamp DateTime 
+  path String @db.MediumText()
+  error String @db.MediumText()
+  errorCode String @db.MediumText()
+  session_id Int?
 
+  user User? @relation(fields: [session_id], references: [id])
+}
+
+//! Al hacer un cambio ejecutar: 
+//! npx prisma migrate dev --name nombredelacarpeta
+//! npx prisma generate
+
+//! Si da error el migrate usar estos
+//! npx prisma migrate reset --force
+//! npx prisma generate

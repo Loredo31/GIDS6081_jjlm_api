@@ -7,7 +7,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { LoginDto } from '../dto/login.dto';
 import { AppException } from 'src/common/exceptions/app.exception';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
   constructor(
     private readonly authSvc: AuthService,
@@ -64,7 +64,8 @@ export class AuthController {
     // Obtener el usuario en sesion
     const userSession = request.user;
     const user = await this.authSvc.getUserById(userSession.id);
-    if (!user || !user.hash) throw new AppException('Acceso denegado', HttpStatus.FORBIDDEN);
+    if (!user || !user.hash) 
+      throw new AppException('Acceso denegado', HttpStatus.FORBIDDEN, '2');
 
     //Comparar el token recibido con el token guardado
     if(userSession.hash != user.hash)throw new AppException('Token invalido',HttpStatus.FORBIDDEN);
